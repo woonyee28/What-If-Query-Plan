@@ -1,43 +1,50 @@
 # interface.py
-import tkinter as tk
-from tkinter import messagebox
-import project
 
-class QueryOptimizerApp:
+import tkinter as tk
+from tkinter import ttk
+import whatif
+import preprocessing
+
+class QEPInterface:
     def __init__(self, root):
         self.root = root
-        self.root.title("SQL Query Optimizer")
+        self.root.title("QEP What-If Analysis Tool")
 
-        # Input SQL query section
-        tk.Label(root, text="Enter SQL Query:").grid(row=0, column=0, sticky="w")
-        self.sql_entry = tk.Text(root, height=5, width=50)
-        self.sql_entry.grid(row=1, column=0, padx=10, pady=10)
+        # Main Frame
+        self.frame = tk.Frame(root)
+        self.frame.pack(fill=tk.BOTH, expand=True)
 
-        # Input what-if question section
-        tk.Label(root, text="Enter What-If Questions:").grid(row=2, column=0, sticky="w")
-        self.what_if_entry = tk.Text(root, height=5, width=50)
-        self.what_if_entry.grid(row=3, column=0, padx=10, pady=10)
+        # Tree View for QEP visualization
+        self.tree = ttk.Treeview(self.frame)
+        self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        # Button to execute the query optimizer
-        tk.Button(root, text="Optimize Query", command=self.run_optimizer).grid(row=4, column=0, pady=10)
+        # Control Panel for "what-if" options
+        self.control_frame = tk.Frame(self.frame)
+        self.control_frame.pack(side=tk.RIGHT, fill=tk.BOTH)
 
-        # Output results section
-        self.result_display = tk.Text(root, height=10, width=50)
-        self.result_display.grid(row=5, column=0, padx=10, pady=10)
+        # Add Control options
+        tk.Label(self.control_frame, text="Modify QEP Node").pack()
+        self.join_type = tk.StringVar(value="Hash Join")
+        tk.Radiobutton(self.control_frame, text="Hash Join", variable=self.join_type, value="Hash Join").pack()
+        tk.Radiobutton(self.control_frame, text="Merge Join", variable=self.join_type, value="Merge Join").pack()
+        
+        tk.Button(self.control_frame, text="Apply What-If", command=self.apply_what_if).pack()
 
-    def run_optimizer(self):
-        sql_query = self.sql_entry.get("1.0", "end-1c")
-        what_if_questions = self.what_if_entry.get("1.0", "end-1c").splitlines()
+    def load_qep(self, qep_data):
+        # Populate tree with QEP data (simplified example)
+        for node in qep_data:
+            self.tree.insert('', 'end', text=node['operation'], values=(node['cost']))
 
-        if not sql_query or not what_if_questions:
-            messagebox.showerror("Input Error", "Please enter both SQL query and What-If questions.")
-            return
+    def apply_what_if(self):
+        selected_join = self.join_type.get()
+        modified_sql = whatif.generate_modified_sql(selected_join)
+        aqp_cost = whatif.get_aqp_cost(modified_sql)
+        print(f"Modified SQL: {modified_sql}\nAQP Cost: {aqp_cost}")
 
-        output = project.run_optimization(sql_query, what_if_questions)
-        self.result_display.delete("1.0", "end")
-        self.result_display.insert("end", output)
+def main():
+    root = tk.Tk()
+    app = QEPInterface(root)
+    root.mainloop()
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = QueryOptimizerApp(root)
-    root.mainloop()
+    main()
