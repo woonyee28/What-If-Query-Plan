@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "what-if-query-plan"
+version = "0.1.0"
+description = "SC3020 Project 2"
+authors = ["Woon Yee, NG"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.10"
+psycopg2 = "^2.9.9"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
