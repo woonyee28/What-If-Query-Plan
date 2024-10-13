@@ -1,17 +1,14 @@
 # project.py
 
-import interface
 import preprocessing
+import interface
 
 def main():
-    # Read sample QEP from a file for demo
+    # Load sample QEP from a file
     qep_data = preprocessing.load_qep_from_file("sample_qep.txt")
-
-    # Initialize GUI with QEP data
-    root = interface.tk.Tk()
-    app = interface.QEPInterface(root)
-    app.load_qep(qep_data)
-    root.mainloop()
+    
+    # Run the GUI interface with loaded QEP data
+    interface.run_interface(qep_data)
 
 if __name__ == "__main__":
     main()
