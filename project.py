@@ -1,5 +1,3 @@
-
-Copy code
 # project.py
 
 import interface
