@@ -18,6 +18,29 @@ postgres=# CREATE DATABASE sc3020;
 CREATE DATABASE
 ```
 - create a new database called sc3020!
+- dbmanager.py
+```
+(what-if-query-plan-py3.10) C:\Users\snorl\Desktop\What-If-Query-Plan>python dbmanager.py
+Database connection successful
+All tables dropped successfully
+Tables created successfully
+Data loaded successfully into region
+Data loaded successfully into nation
+Data loaded successfully into customer
+Data loaded successfully into supplier
+Data loaded successfully into orders
+Data loaded successfully into part
+Data loaded successfully into partsupp
+Data loaded successfully into lineitem
+
+Executing a sample query:
+(0, 'AFRICA                   ', 'lar deposits. blithely final packages cajole. regular waters are final requests. regular accounts are according to ')
+(1, 'AMERICA                  ', 'hs use ironic, even requests. s')
+(2, 'ASIA                     ', 'ges. thinly even pinto beans ca')
+(3, 'EUROPE                   ', 'ly final courts cajole furiously final excuse')
+(4, 'MIDDLE EAST              ', 'uickly special accounts cajole carefully blithely close requests. carefully final asymptotes haggle furiousl')
+Database connection closed
+```
 
 ## Data Source:
 - TPC-H Tools Version: 3.0.1
