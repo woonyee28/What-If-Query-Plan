@@ -1,5 +1,22 @@
 # What-If-Query-Plan
 
+# PostgreSQL Version
+- 17.0 Windows x86-64
+- remember to add to PATH -> Eg: C:\Program Files\PostgreSQL\17\bin
+- After path is added you can get something like this in cmd to initiate a session to verify that PostgreSQL is installed!
+```
+C:\Users\snorl>psql -U postgres
+Password for user postgres:
+
+psql (17.0)
+WARNING: Console code page (437) differs from Windows code page (1252)
+         8-bit characters might not work correctly. See psql reference
+         page "Notes for Windows users" for details.
+Type "help" for help.
+
+postgres=#
+```
+
 ## Data Source:
 - TPC-H Tools Version: 3.0.1
 
@@ -28,3 +45,4 @@ exit                        # To exit the virtual environment
 ## Example:
 https://howardlee.cn/mocha/
 https://howardlee.cn/lantern/
+
