@@ -3,7 +3,7 @@ import os
 def convert_tbl_to_csv(tbl_file, csv_file):
     with open(tbl_file, 'r') as tbl, open(csv_file, 'w', newline='') as csv:
         for line in tbl:
-            line = line.rstrip('|').strip()
+            line = line.rstrip('|').strip()[:-1]
             csv.write(line + '\n')
 
 def convert_all_tbl_files(directory):
