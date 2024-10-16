@@ -14,8 +14,10 @@ WARNING: Console code page (437) differs from Windows code page (1252)
          page "Notes for Windows users" for details.
 Type "help" for help.
 
-postgres=#
+postgres=# CREATE DATABASE sc3020;
+CREATE DATABASE
 ```
+- create a new database called sc3020!
 
 ## Data Source:
 - TPC-H Tools Version: 3.0.1
