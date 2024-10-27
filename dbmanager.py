@@ -251,16 +251,18 @@ class DatabaseManager:
             print(f"Failed to execute query: {e}")
 
 
+
 if __name__ == "__main__":
     db_params = {
         'dbname': 'sc3020',
         'user': 'postgres',
-        'password': 'nopassword',
+        'password': '',
         'host': 'localhost',  
         'port': '5432'
     }
 
-    csv_path = "C:/Users/snorl/Desktop/What-If-Query-Plan/datasets" 
+    csv_path = "D:\\New folder\\Documents\\NTU BCG\\NTU BCG Y3S1\\SC3020 Databases System Principles\\What-If-Query-Plan\\datasets"
+
 
     db_manager = DatabaseManager(db_params, csv_path)
 

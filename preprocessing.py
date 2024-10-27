@@ -1,6 +1,36 @@
-# preprocessing.py
+import psycopg2
 
-# preprocessing.py
+
+def set_planner_options(cursor, options):
+    """Applies the specified planner settings for query optimization."""
+    for option, state in options.items():
+        cursor.execute(f"SET {option} = {'ON' if state else 'OFF'};")
+    print("Planner options set successfully")
+
+
+def reset_planner_options(cursor):
+    """Resets all planner options to their default values."""
+    cursor.execute("RESET enable_seqscan;")
+    cursor.execute("RESET enable_indexscan;")
+    cursor.execute("RESET enable_hashjoin;")
+    cursor.execute("RESET enable_mergejoin;")
+    print("Planner options reset successfully")
+
+
+
+def run_query_with_settings(db_manager, query, settings):
+    """Runs a query with specific planner settings and prints the execution plan."""
+    set_planner_options(db_manager.cursor, settings)
+    try:
+        db_manager.cursor.execute(f"EXPLAIN ANALYZE {query}")
+        plan = db_manager.cursor.fetchall()
+        print("Execution Plan:")
+        for line in plan:
+            print(line)
+    except Exception as e:
+        print(f"Failed to execute query: {e}")
+    finally:
+        reset_planner_options(db_manager.cursor)
 
 def parse_qep_output(qep_output):
     # Parse QEP into a structured format for visualization
