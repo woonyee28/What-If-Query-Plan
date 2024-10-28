@@ -245,7 +245,7 @@ class DatabaseManager:
         try:
             self.cursor.execute(query)
             results = self.cursor.fetchall()
-            for row in result s:
+            for row in results:
                 print(row)
         except Exception as e:
             print(f"Failed to execute query: {e}")
