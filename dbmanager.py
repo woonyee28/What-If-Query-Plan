@@ -261,7 +261,7 @@ if __name__ == "__main__":
         'port': '5432'
     }
 
-    csv_path = "D:\\New folder\\Documents\\NTU BCG\\NTU BCG Y3S1\\SC3020 Databases System Principles\\What-If-Query-Plan\\datasets"
+    csv_path = "./datasets"
 
 
     db_manager = DatabaseManager(db_params, csv_path)

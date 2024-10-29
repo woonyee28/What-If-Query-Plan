@@ -10,6 +10,8 @@ package-mode = false
 python = "^3.10"
 psycopg2 = "^2.9.9"
 streamlit = "^1.39.0"
+networkx = "^3.4.2"
+pyvis = "^0.3.2"
 
 
 [build-system]
