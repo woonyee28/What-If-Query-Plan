@@ -1,24 +1,42 @@
 # whatif.py
 
-import subprocess
+import streamlit as st
 
-def generate_modified_sql(join_type):
-    # Generate SQL query with modified join type
-    sql_query = "SELECT * FROM table_a a JOIN table_b b ON a.id = b.id"
-    if join_type == "Merge Join":
-        modified_sql = f"SET enable_hashjoin = off; SET enable_mergejoin = on; {sql_query};"
-    elif join_type == "Hash Join":
-        modified_sql = f"SET enable_mergejoin = off; SET enable_hashjoin = on; {sql_query};"
-    return modified_sql
+def get_qep(connection, query):
+    try:
+        with connection.cursor() as cursor:
+            explain_query = f"EXPLAIN (FORMAT JSON) {query}"
+            cursor.execute(explain_query)
+            result = cursor.fetchone()[0][0]
+            plan = result['Plan']
+            total_cost = plan['Total Cost']
+            # Store in session state
+            st.session_state.qep_plan = plan
+            st.session_state.qep_cost = total_cost
+            return plan, total_cost
+    except Exception as e:
+        st.error(f"Error retrieving QEP: {e}")
+        return None, None
 
-def get_aqp_cost(sql_query):
-    # Execute modified SQL query with EXPLAIN ANALYZE
-    result = subprocess.run(['psql', '-c', f"EXPLAIN ANALYZE {sql_query}"], capture_output=True, text=True)
-    return parse_cost(result.stdout)
-
-def parse_cost(explain_output):
-    # Extract cost estimate from EXPLAIN ANALYZE output
-    lines = explain_output.splitlines()
-    cost_line = lines[0] if lines else "cost=0.00..0.00"
-    cost = cost_line.split('..')[-1].split(' ')[0]
-    return float(cost) if cost.isdigit() else 0.0
+def get_aqp(connection, query, scan_settings, join_settings):
+    try:
+        with connection.cursor() as cursor:
+            # Set the planner settings
+            for param, value in {**scan_settings, **join_settings}.items():
+                cursor.execute(f"SET {param} TO {'on' if value else 'off'};")
+            # Use EXPLAIN to get the alternative query plan in JSON format
+            explain_query = f"EXPLAIN (FORMAT JSON) {query}"
+            cursor.execute(explain_query)
+            result = cursor.fetchone()[0][0]
+            plan = result['Plan']
+            total_cost = plan['Total Cost']
+            # Reset only the planner settings we changed
+            for param in {**scan_settings, **join_settings}.keys():
+                cursor.execute(f"RESET {param};")
+            # Store in session state
+            st.session_state.aqp_plan = plan
+            st.session_state.aqp_cost = total_cost
+            return plan, total_cost
+    except Exception as e:
+        st.error(f"Error retrieving AQP: {e}")
+        return None, None

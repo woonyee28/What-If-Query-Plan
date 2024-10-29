@@ -1,39 +1,16 @@
-# project.py
-
-import preprocessing
-import interface
-from interface import get_user_options  # Assuming this function gets options based on GUI inputs
-import psycopg2
-from dbmanager import DatabaseManager
-from psycopg2 import sql
 import os
+import signal
+import sys
 
-
-
-def main():
-    db_params = {
-        'dbname': 'your_db',
-        'user': 'your_user',
-        'password': 'your_password',
-        'host': 'localhost',
-        'port': '5432'
-    }
-    csv_path = "path_to_csv_files"
-
-    # Instantiate DatabaseManager
-    db_manager = DatabaseManager(db_params, csv_path)
-    db_manager.connect()
-
-    # Get options based on user input
-    options = get_user_options()  # Retrieve user-selected planner settings
-
-    # Run the query with the specific planner settings
-    query = "SELECT * FROM your_table LIMIT 5;"
-    preprocessing.run_query_with_settings(db_manager, query, settings)
-
-    # Close the connection after use
-    db_manager.close()
- 
+def signal_handler(sig, frame):
+    print("\nExiting gracefully...")
+    sys.exit(0)
 
 if __name__ == "__main__":
-    main()
+    # Register the signal handler for SIGINT (Ctrl+C)
+    signal.signal(signal.SIGINT, signal_handler)
+    
+    try:
+        os.system('streamlit run interface.py')
+    except KeyboardInterrupt:
+        signal_handler(None, None)

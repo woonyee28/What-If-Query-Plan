@@ -1,9 +1,7 @@
 import streamlit as st
-import psycopg2
-from psycopg2 import sql
 import pandas as pd
-import networkx as nx
-from pyvis.network import Network
+from preprocessing import connect_to_db, visualize_plan
+from whatif import get_qep, get_aqp
 
 # Set the page configuration
 st.set_page_config(page_title="Query Plan Visualizer", layout="wide")
@@ -26,107 +24,36 @@ if "qep_cost" not in st.session_state:
 if "aqp_cost" not in st.session_state:
     st.session_state.aqp_cost = None
 
-# Function to connect to the database with autocommit enabled
-def connect_to_db(dbname, username, password):
-    try:
-        connection = psycopg2.connect(
-            dbname=dbname,
-            user=username,
-            password=password,
-            host="localhost",  # Change if using a different host
-            port="5432"        # Default port for PostgreSQL
-        )
-        connection.autocommit = True  # Enable autocommit
-        return connection
-    except Exception as e:
-        st.error(f"Error connecting to the database: {e}")
-        return None
-
-# Function to get QEP
-def get_qep(connection, query):
-    try:
-        with connection.cursor() as cursor:
-            explain_query = f"EXPLAIN (FORMAT JSON) {query}"
-            cursor.execute(explain_query)
-            result = cursor.fetchone()[0][0]
-            plan = result['Plan']
-            total_cost = plan['Total Cost']
-            # Store in session state
-            st.session_state.qep_plan = plan
-            st.session_state.qep_cost = total_cost
-            return plan, total_cost
-    except Exception as e:
-        st.error(f"Error retrieving QEP: {e}")
-        return None, None
-
-# Function to get AQP
-def get_aqp(connection, query, scan_settings, join_settings):
-    try:
-        with connection.cursor() as cursor:
-            # Set the planner settings
-            for param, value in {**scan_settings, **join_settings}.items():
-                cursor.execute(f"SET {param} TO {'on' if value else 'off'};")
-            # Use EXPLAIN to get the alternative query plan in JSON format
-            explain_query = f"EXPLAIN (FORMAT JSON) {query}"
-            cursor.execute(explain_query)
-            result = cursor.fetchone()[0][0]
-            plan = result['Plan']
-            total_cost = plan['Total Cost']
-            # Reset only the planner settings we changed
-            for param in {**scan_settings, **join_settings}.keys():
-                cursor.execute(f"RESET {param};")
-            # Store in session state
-            st.session_state.aqp_plan = plan
-            st.session_state.aqp_cost = total_cost
-            return plan, total_cost
-    except Exception as e:
-        st.error(f"Error retrieving AQP: {e}")
-        return None, None
-
-# Function to visualize plan
-def visualize_plan(plan):
-    G = nx.DiGraph()
-
-    def add_nodes_edges(node, parent_id=None):
-        node_id = id(node)
-        node_type = node['Node Type']
-        # Include more details in the label
-        node_label = f"{node_type}\nCost: {node['Total Cost']}"
-        if 'Relation Name' in node:
-            node_label += f"\nRelation: {node['Relation Name']}"
-        if 'Index Name' in node:
-            node_label += f"\nIndex: {node['Index Name']}"
-        G.add_node(node_id, label=node_label)
-        if parent_id:
-            G.add_edge(parent_id, node_id)
-
-        for child in node.get('Plans', []):
-            add_nodes_edges(child, node_id)
-
-    add_nodes_edges(plan)
-
-    net = Network(height="600px", width="100%", directed=True)
-    net.from_nx(G)
-    net.repulsion(node_distance=200, spring_length=200)
-    net.save_graph("plan.html")
-    with open("plan.html", 'r', encoding='utf-8') as f:
-        html = f.read()
-    st.components.v1.html(html, height=600, scrolling=True)
-
 # Display login form if not logged in
 if not st.session_state.logged_in:
-    st.title("Database Login")
-    dbname = st.text_input("Database Name")
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
+    st.title("Welcome to the Query Plan Visualizer")
+    st.markdown("""
+    ### Project Summary: What-If Analysis of Query Plans
 
-    if st.button("Login"):
-        connection = connect_to_db(dbname, username, password)
+    The **What-If Analysis of Query Plans** project aims to develop a software tool that enables users to analyze and modify query execution plans (QEPs) for SQL queries. The project is a part of the **CX4031/SC3020 Database System Principles** course.
+
+    ##### Key Objectives:
+    1. **Visualize QEPs:** Display the query execution plans for given SQL queries.
+    2. **What-If Scenarios:** Allow users to modify QEPs interactively and generate alternative query plans.
+    3. **Cost Comparison:** Compare the estimated costs between the original QEP and modified AQP.
+                 
+    **Our Advisor:** Assoc Prof Sourav Saha Bhowmick
+
+    **Team Members:**
+    1. Ng Woon Yee
+    2. Yang Yichen
+    3. Tay Zhi Xian
+    4. Alex Khoo Shien How
+    5. Chua Ming Ru
+    """)
+
+
+    
+    if st.button("Enter"):
+        connection = connect_to_db()
         if connection:
             st.session_state.logged_in = True
             st.session_state.connection = connection
-            st.session_state.dbname = dbname
-            st.session_state.username = username
             st.success("Login successful!")
             st.rerun()
         else:
@@ -134,9 +61,7 @@ if not st.session_state.logged_in:
 else:
     # Main interface
     st.sidebar.header("Database schema (current DB: TPCH)")
-    st.sidebar.write(f"Logged in as: **{st.session_state.username}**")
-    st.sidebar.write(f"Current database: **{st.session_state.dbname}**")
-    if st.sidebar.button("Logout"):
+    if st.sidebar.button("Exit"):
         st.session_state.logged_in = False
         st.session_state.connection = None
         # Clear stored plans and costs

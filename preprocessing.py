@@ -1,65 +1,59 @@
+# preprocessing.py
+
 import psycopg2
+import streamlit as st
+import networkx as nx
+from pyvis.network import Network
 
-
-def set_planner_options(cursor, options):
-    """Applies the specified planner settings for query optimization."""
-    for option, state in options.items():
-        cursor.execute(f"SET {option} = {'ON' if state else 'OFF'};")
-    print("Planner options set successfully")
-
-
-def reset_planner_options(cursor):
-    """Resets all planner options to their default values."""
-    cursor.execute("RESET enable_seqscan;")
-    cursor.execute("RESET enable_indexscan;")
-    cursor.execute("RESET enable_hashjoin;")
-    cursor.execute("RESET enable_mergejoin;")
-    print("Planner options reset successfully")
-
-
-
-def run_query_with_settings(db_manager, query, settings):
-    """Runs a query with specific planner settings and prints the execution plan."""
-    set_planner_options(db_manager.cursor, settings)
+def connect_to_db():
     try:
-        db_manager.cursor.execute(f"EXPLAIN ANALYZE {query}")
-        plan = db_manager.cursor.fetchall()
-        print("Execution Plan:")
-        for line in plan:
-            print(line)
+        # connection = psycopg2.connect(
+        #     dbname=dbname,
+        #     user=username,
+        #     password=password,
+        #     host="localhost",  # Change if using a different host
+        #     port="5432"        # Default port for PostgreSQL
+        # )
+        db_params = {
+            'dbname': 'defaultdb',
+            'user': 'avnadmin',
+            'password': 'AVNS_mHAKcYWuEuMGRcuQcVi',
+            'host': 'sc3020-woonyee28.e.aivencloud.com',
+            'port': '14534',
+            'sslmode': 'require'
+        }
+        connection = psycopg2.connect(**db_params)
+        connection.autocommit = True  # Enable autocommit
+        return connection
     except Exception as e:
-        print(f"Failed to execute query: {e}")
-    finally:
-        reset_planner_options(db_manager.cursor)
+        st.error(f"Error connecting to the database: {e}")
+        return None
 
-def parse_qep_output(qep_output):
-    # Parse QEP into a structured format for visualization
-    print("Parsing...")
-    qep_data = []
-    for line in qep_output.splitlines():
-        node = {}
-        parts = line.split()
-        
-        # Check if line contains "cost=" and parse cost information
-        if 'cost=' in line:
-            try:
-                # Find the cost portion and parse it
-                cost_part = line.split('cost=')[1].split('..')[-1].split(' ')[0]
-                node['cost'] = float(cost_part)
-            except (IndexError, ValueError):
-                node['cost'] = 0.0  # Default to 0 if parsing fails
+def visualize_plan(plan):
+    G = nx.DiGraph()
 
-            # Set the operation type (e.g., Seq Scan, Nested Loop)
-            node['operation'] = parts[0] if parts else "Unknown Operation"
-        else:
-            node['operation'] = parts[0] if parts else "Unknown Operation"
-            node['cost'] = 0.0  # Set cost to 0 if not found
-        
-        qep_data.append(node)
-    return qep_data
+    def add_nodes_edges(node, parent_id=None):
+        node_id = id(node)
+        node_type = node['Node Type']
+        # Include more details in the label
+        node_label = f"{node_type}\nCost: {node['Total Cost']}"
+        if 'Relation Name' in node:
+            node_label += f"\nRelation: {node['Relation Name']}"
+        if 'Index Name' in node:
+            node_label += f"\nIndex: {node['Index Name']}"
+        G.add_node(node_id, label=node_label)
+        if parent_id:
+            G.add_edge(parent_id, node_id)
 
-def load_qep_from_file(file_path):
-    # Load QEP from a file and parse it
-    with open(file_path, 'r') as file:
-        qep_output = file.read()
-    return parse_qep_output(qep_output)
+        for child in node.get('Plans', []):
+            add_nodes_edges(child, node_id)
+
+    add_nodes_edges(plan)
+
+    net = Network(height="600px", width="100%", directed=True)
+    net.from_nx(G)
+    net.repulsion(node_distance=200, spring_length=200)
+    net.save_graph("plan.html")
+    with open("plan.html", 'r', encoding='utf-8') as f:
+        html = f.read()
+    st.components.v1.html(html, height=600, scrolling=True)

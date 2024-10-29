@@ -53,8 +53,7 @@ class DatabaseManager:
                 CONSTRAINT region_pkey PRIMARY KEY (r_regionkey)
             );
             
-            ALTER TABLE public.region
-                OWNER to postgres; 
+          
             """,
             """
             CREATE TABLE IF NOT EXISTS public.nation (
@@ -68,9 +67,7 @@ class DatabaseManager:
                     ON UPDATE NO ACTION
                     ON DELETE NO ACTION
             );
-            
-            ALTER TABLE public.nation
-                OWNER to postgres; 
+   
             """,
             """
             CREATE TABLE IF NOT EXISTS public.part (
@@ -86,8 +83,7 @@ class DatabaseManager:
                 CONSTRAINT part_pkey PRIMARY KEY (p_partkey)
             );
             
-            ALTER TABLE public.part
-                OWNER to postgres; 
+
             """,
             """
             CREATE TABLE IF NOT EXISTS public.supplier (
@@ -105,8 +101,6 @@ class DatabaseManager:
                     ON DELETE NO ACTION
             );
             
-            ALTER TABLE public.supplier
-                OWNER to postgres; 
             """,
             """
             CREATE TABLE IF NOT EXISTS public.partsupp (
@@ -125,9 +119,6 @@ class DatabaseManager:
                     ON UPDATE NO ACTION
                     ON DELETE NO ACTION
             );
-            
-            ALTER TABLE public.partsupp
-                OWNER to postgres; 
             """,
             """
             CREATE TABLE IF NOT EXISTS public.customer (
@@ -146,8 +137,6 @@ class DatabaseManager:
                     ON DELETE NO ACTION
             );
             
-            ALTER TABLE public.customer
-                OWNER to postgres; 
             """,
             """
             CREATE TABLE IF NOT EXISTS public.orders (
@@ -166,9 +155,6 @@ class DatabaseManager:
                     ON UPDATE NO ACTION
                     ON DELETE NO ACTION
             );
-            
-            ALTER TABLE public.orders
-                OWNER to postgres; 
             """,
             """
             CREATE TABLE IF NOT EXISTS public.lineitem (
@@ -202,8 +188,6 @@ class DatabaseManager:
                     ON UPDATE NO ACTION
                     ON DELETE NO ACTION
             );
-            ALTER TABLE public.lineitem
-                OWNER to postgres; 
             """
         ]
 
@@ -253,12 +237,21 @@ class DatabaseManager:
 
 
 if __name__ == "__main__":
+    # db_params = {
+    #     'dbname': 'sc3020',
+    #     'user': 'postgres',
+    #     'password': '',
+    #     'host': 'localhost',  
+    #     'port': '5432'
+    # }
+
     db_params = {
-        'dbname': 'sc3020',
-        'user': 'postgres',
-        'password': '',
-        'host': 'localhost',  
-        'port': '5432'
+        'dbname': 'defaultdb',
+        'user': 'avnadmin',
+        'password': 'AVNS_mHAKcYWuEuMGRcuQcVi',
+        'host': 'sc3020-woonyee28.e.aivencloud.com',
+        'port': '14534',
+        'sslmode': 'require'
     }
 
     csv_path = "./datasets"
@@ -279,4 +272,5 @@ if __name__ == "__main__":
 
     # Close the database connection
     db_manager.close()
+
 
