@@ -61,9 +61,6 @@ def visualize_plan(plan):
         html = f.read()
     st.components.v1.html(html, height=600, scrolling=True)
 
-    printing_output(plan)
-
-
 
 # ALEX - TODO: TO COMPLETE FOR OTHER JOINS
 
@@ -126,20 +123,15 @@ def parse_plan_with_tables(plan, step_number=1, steps=None, intermediate_table_n
     
     return steps
 
-
-def printing_output(plan):
+def printing_steps_output(plan):
     steps = parse_plan_with_tables(plan)
     total_steps = len(steps)
     reversed_steps = [
         f"Step {i+1}: {step[step.index(':')+1:].strip()} to get intermediate table T{i + 1}"
         for i, step in enumerate(steps[::-1])
     ]
-
-    print("The query is executed as follows")
     # Print each step in the reversed parsed output
-    for step in reversed_steps:
-        print(step)
-    return
+    return reversed_steps
 
 
 def printing_API_output(query):
@@ -155,5 +147,4 @@ def printing_API_output(query):
         model="llama3-8b-8192",
         stream=False,
     )
-
-    print(chat_completion.choices[0].message.content)
+    return chat_completion.choices[0].message.content

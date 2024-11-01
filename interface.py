@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from preprocessing import connect_to_db, visualize_plan,printing_API_output
+from preprocessing import connect_to_db, visualize_plan, printing_API_output, printing_steps_output
 from whatif import get_qep, get_aqp
 
 # Set the page configuration
@@ -153,7 +153,6 @@ else:
             st.error("No database connection available.")
 
     st.subheader("Modify Planner Methods (What-if Scenarios)")
-
     scan_methods = {
         "Sequential Scan": "enable_seqscan",
         "Index Scan": "enable_indexscan",
@@ -229,3 +228,50 @@ else:
         st.write(f"**AQP Total Cost:** {aqp_cost}")
         cost_difference = aqp_cost - qep_cost
         st.write(f"**Cost Difference (AQP - QEP):** {cost_difference}")
+
+
+    st.markdown("---")    
+    st.markdown(
+    "<u><b style='font-size: 30px;'>Natural Language Text Description for QEP</b></u>",
+    unsafe_allow_html=True
+    )
+    if st.session_state.qep_plan:
+        st.markdown("---")
+        st.subheader("**SQL Steps Description**")
+        reversed_steps = printing_steps_output(st.session_state.qep_plan)
+        st.write("The query is executed as follows")
+        for step in reversed_steps:
+            st.write(step)
+
+        st.markdown("---")
+        st.subheader("**Natural Language Model Description**")
+        NLM_description = printing_API_output(st.session_state.qep_plan)
+        st.write(NLM_description)
+        
+    st.markdown("---")
+    st.markdown(
+    "<u><b style='font-size: 30px;'>Natural Language Text Description for AQP</b></u>",
+    unsafe_allow_html=True
+    )
+    if st.session_state.aqp_plan:
+        st.markdown("---")
+        st.subheader("**SQL Steps Description for AQP:**")
+        reversed_steps = printing_steps_output(st.session_state.aqp_plan)
+        st.write("The query is executed as follows")
+        for step in reversed_steps:
+            st.write(step)
+
+        st.markdown("---")
+        st.subheader("**Natural Language Model Description for AQP:**")
+        NLM_description = printing_API_output(st.session_state.aqp_plan)
+        st.write(NLM_description)
+
+    st.markdown("---")    
+
+    if st.session_state.qep_plan:
+        st.markdown(
+        "<u><b style='font-size: 30px;'>Natural Language Model Description for Query</b></u>",
+        unsafe_allow_html=True
+        )
+        query_description = printing_API_output(sql_query)
+        st.write(query_description)
