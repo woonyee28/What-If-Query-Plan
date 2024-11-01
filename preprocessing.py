@@ -62,8 +62,7 @@ def visualize_plan(plan):
     st.components.v1.html(html, height=600, scrolling=True)
 
 
-# ALEX - TODO: TO COMPLETE FOR OTHER JOINS
-
+# ALEX - TODO: TO TACKLE EDGE CASES
 def parse_plan_with_tables(plan, step_number=1, steps=None, intermediate_table_num=1):
     if steps is None:
         steps = []
@@ -78,8 +77,6 @@ def parse_plan_with_tables(plan, step_number=1, steps=None, intermediate_table_n
     if node_type in ["Sequential Scan", "Bitmap Heap Scan", "Index Scan", "Index Only Scan", "Bitmap Index Scan", "Tid Scan", "Sample Scan"]:
         table_name = plan.get("Relation Name")
         filter_condition = plan.get("Filter")
-
-
         if filter_condition:
             cleaned_condition = re.sub(r'::[a-zA-Z]+', '', filter_condition)  
             details += f" on table '{table_name}' and filter on ({cleaned_condition}) "
@@ -89,9 +86,15 @@ def parse_plan_with_tables(plan, step_number=1, steps=None, intermediate_table_n
     elif node_type == "Nested Loop":
         details += f" with nested join conditions "
 
+    elif node_type == "Merge Join":
+        merge_cond = plan.get("Merge Cond")
+        table_names = re.findall(r'(\w+)\.\w+', merge_cond)
+        condition = re.search(r'\((.*)\)', merge_cond).group(1)
+        details += f" on tables {table_names} on the condition {condition}"
+
     elif node_type == "Sort":
         sort_keys = ", ".join(plan.get("Sort Key", []))
-        details += f", sorted by {sort_keys}."
+        details += f" using the sorted condition {sort_keys}."
 
     elif node_type == "Aggregate":
         strategy = plan.get("Strategy", "Unknown strategy")
@@ -110,6 +113,10 @@ def parse_plan_with_tables(plan, step_number=1, steps=None, intermediate_table_n
                 relation_name = sub_plan["Relation Name"]
                 details += f" The relation used to form the hash table is '{relation_name}' "
 
+    elif node_type == "Memoize":
+        cache_key = plan.get("Cache Key")
+        details += f" to optimise performance by caching the results od expensive operations based on a key {cache_key} "
+
     elif node_type == "Limit":
         details += f" to limit results to {plan.get('Plan Rows', 'a specified number')} rows and get the final result "
     
@@ -124,6 +131,8 @@ def parse_plan_with_tables(plan, step_number=1, steps=None, intermediate_table_n
     return steps
 
 def printing_steps_output(plan):
+    print(plan)
+    print("\n")
     steps = parse_plan_with_tables(plan)
     total_steps = len(steps)
     reversed_steps = [

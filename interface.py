@@ -259,7 +259,7 @@ else:
 
         st.markdown("---")
         st.subheader("**SQL Steps Description for QEP**")
-        st.write("The query is executed as follows")
+        st.markdown("<b>The query is executed as follows</b>", unsafe_allow_html=True)
         for step in st.session_state.last_qep_cached_steps:
             st.write(step)
 
@@ -281,7 +281,7 @@ else:
 
         st.markdown("---")
         st.subheader("**SQL Steps Description for AQP**")
-        st.write("The query is executed as follows")
+        st.markdown("<b>The query is executed as follows</b>", unsafe_allow_html=True)
         for step in st.session_state.last_aqp_cached_steps:
             st.write(step)
 
