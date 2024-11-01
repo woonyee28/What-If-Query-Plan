@@ -5,6 +5,8 @@ import re
 import streamlit as st
 import networkx as nx
 from pyvis.network import Network
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+from groq import Groq
 
 def connect_to_db():
     try:
@@ -58,6 +60,9 @@ def visualize_plan(plan):
     with open("plan.html", 'r', encoding='utf-8') as f:
         html = f.read()
     st.components.v1.html(html, height=600, scrolling=True)
+
+    printing_output(plan)
+
 
 
 # ALEX - TODO: TO COMPLETE FOR OTHER JOINS
@@ -135,3 +140,20 @@ def printing_output(plan):
     for step in reversed_steps:
         print(step)
     return
+
+
+def printing_API_output(query):
+    client = Groq(api_key='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')
+
+    chat_completion = client.chat.completions.create(
+        messages=[
+            {
+                "role": "user",
+                "content": f"Explain the query {query};",
+            }
+        ],
+        model="llama3-8b-8192",
+        stream=False,
+    )
+
+    print(chat_completion.choices[0].message.content)

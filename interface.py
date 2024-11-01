@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from preprocessing import connect_to_db, visualize_plan
+from preprocessing import connect_to_db, visualize_plan,printing_API_output
 from whatif import get_qep, get_aqp
 
 # Set the page configuration
