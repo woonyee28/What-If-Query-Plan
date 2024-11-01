@@ -230,48 +230,73 @@ else:
         st.write(f"**Cost Difference (AQP - QEP):** {cost_difference}")
 
 
-    st.markdown("---")    
+
+
+
+    if "last_aqp_plan" not in st.session_state:
+        st.session_state.last_aqp_plan = None
+        st.session_state.last_aqp_cached_steps = []
+        st.session_state.last_aqp_cached_NLM_description = ""
+
+    if "last_qep_plan" not in st.session_state:
+        st.session_state.last_qep_plan = None        
+        st.session_state.last_qep_cached_steps = []
+        st.session_state.last_qep_cached_NLM_description = ""
+    
+    if "last_query" not in st.session_state:
+        st.session_state.last_query_description = ""
+        st.session_state.last_query = None       
+
     st.markdown(
     "<u><b style='font-size: 30px;'>Natural Language Text Description for QEP</b></u>",
     unsafe_allow_html=True
     )
     if st.session_state.qep_plan:
+        if st.session_state.last_qep_plan != st.session_state.qep_plan:
+            st.session_state.last_qep_cached_steps = printing_steps_output(st.session_state.qep_plan)
+            st.session_state.last_qep_cached_NLM_description = printing_API_output(st.session_state.qep_plan)
+            st.session_state.last_qep_plan = st.session_state.qep_plan
+
         st.markdown("---")
-        st.subheader("**SQL Steps Description**")
-        reversed_steps = printing_steps_output(st.session_state.qep_plan)
+        st.subheader("**SQL Steps Description for QEP**")
         st.write("The query is executed as follows")
-        for step in reversed_steps:
+        for step in st.session_state.last_qep_cached_steps:
             st.write(step)
 
         st.markdown("---")
-        st.subheader("**Natural Language Model Description**")
-        NLM_description = printing_API_output(st.session_state.qep_plan)
-        st.write(NLM_description)
-        
+        st.subheader("**Natural Language Model Description for QEP**")
+        st.write(st.session_state.last_qep_cached_NLM_description)
+
     st.markdown("---")
     st.markdown(
     "<u><b style='font-size: 30px;'>Natural Language Text Description for AQP</b></u>",
     unsafe_allow_html=True
     )
+
     if st.session_state.aqp_plan:
+        if st.session_state.last_aqp_plan != st.session_state.aqp_plan:
+            st.session_state.last_aqp_cached_steps = printing_steps_output(st.session_state.aqp_plan)
+            st.session_state.last_aqp_cached_NLM_description = printing_API_output(st.session_state.aqp_plan)
+            st.session_state.last_aqp_plan = st.session_state.aqp_plan
+
         st.markdown("---")
-        st.subheader("**SQL Steps Description for AQP:**")
-        reversed_steps = printing_steps_output(st.session_state.aqp_plan)
+        st.subheader("**SQL Steps Description for AQP**")
         st.write("The query is executed as follows")
-        for step in reversed_steps:
+        for step in st.session_state.last_aqp_cached_steps:
             st.write(step)
 
         st.markdown("---")
-        st.subheader("**Natural Language Model Description for AQP:**")
-        NLM_description = printing_API_output(st.session_state.aqp_plan)
-        st.write(NLM_description)
+        st.subheader("**Natural Language Model Description for AQP**")
+        st.write(st.session_state.last_aqp_cached_NLM_description)
 
     st.markdown("---")    
 
-    if st.session_state.qep_plan:
-        st.markdown(
+    st.markdown(
         "<u><b style='font-size: 30px;'>Natural Language Model Description for Query</b></u>",
         unsafe_allow_html=True
-        )
-        query_description = printing_API_output(sql_query)
-        st.write(query_description)
+    )
+
+    if st.session_state.last_query != sql_query:
+        st.session_state.last_query_description = printing_API_output(sql_query)
+        st.session_state.last_query = sql_query
+    st.write(st.session_state.last_query_description)
