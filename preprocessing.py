@@ -143,7 +143,7 @@ def printing_steps_output(plan):
     return reversed_steps
 
 
-def printing_API_output(query):
+def printing_API_output_query(query):
     client = Groq(api_key='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')
 
     chat_completion = client.chat.completions.create(
@@ -151,6 +151,22 @@ def printing_API_output(query):
             {
                 "role": "user",
                 "content": f"Explain the query {query};",
+            }
+        ],
+        model="llama3-8b-8192",
+        stream=False,
+    )
+    return chat_completion.choices[0].message.content
+
+
+def printing_API_output_plan(aqp_plan, qep_plan):
+    client = Groq(api_key='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')
+
+    chat_completion = client.chat.completions.create(
+        messages=[
+            {
+                "role": "user",
+                "content": f"Compare beteen the two AQP plan {aqp_plan} and QEP plan {qep_plan}. Structure the output similar to this, The QEP (SP) is selected because it has the least cost amongst other plans. Index scan on lineitem is faster due to high selectivity of predicate. Seq scan on orders is faster due to low selectivity of predicate.",
             }
         ],
         model="llama3-8b-8192",

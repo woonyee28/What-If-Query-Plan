@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from preprocessing import connect_to_db, visualize_plan, printing_API_output, printing_steps_output
+from preprocessing import connect_to_db, visualize_plan, printing_API_output_query, printing_API_output_plan, printing_steps_output
 from whatif import get_qep, get_aqp
 
 # Set the page configuration
@@ -231,30 +231,29 @@ else:
 
 
 
-
-
     if "last_aqp_plan" not in st.session_state:
         st.session_state.last_aqp_plan = None
         st.session_state.last_aqp_cached_steps = []
-        st.session_state.last_aqp_cached_NLM_description = ""
+        st.session_state.last_plan_description = ""
 
     if "last_qep_plan" not in st.session_state:
         st.session_state.last_qep_plan = None        
         st.session_state.last_qep_cached_steps = []
-        st.session_state.last_qep_cached_NLM_description = ""
-    
+
     if "last_query" not in st.session_state:
         st.session_state.last_query_description = ""
-        st.session_state.last_query = None       
+        st.session_state.last_query = None      
+
+ 
 
     st.markdown(
     "<u><b style='font-size: 30px;'>Natural Language Text Description for QEP</b></u>",
     unsafe_allow_html=True
     )
+
     if st.session_state.qep_plan:
         if st.session_state.last_qep_plan != st.session_state.qep_plan:
             st.session_state.last_qep_cached_steps = printing_steps_output(st.session_state.qep_plan)
-            st.session_state.last_qep_cached_NLM_description = printing_API_output(st.session_state.qep_plan)
             st.session_state.last_qep_plan = st.session_state.qep_plan
 
         st.markdown("---")
@@ -263,9 +262,6 @@ else:
         for step in st.session_state.last_qep_cached_steps:
             st.write(step)
 
-        st.markdown("---")
-        st.subheader("**Natural Language Model Description for QEP**")
-        st.write(st.session_state.last_qep_cached_NLM_description)
 
     st.markdown("---")
     st.markdown(
@@ -276,7 +272,6 @@ else:
     if st.session_state.aqp_plan:
         if st.session_state.last_aqp_plan != st.session_state.aqp_plan:
             st.session_state.last_aqp_cached_steps = printing_steps_output(st.session_state.aqp_plan)
-            st.session_state.last_aqp_cached_NLM_description = printing_API_output(st.session_state.aqp_plan)
             st.session_state.last_aqp_plan = st.session_state.aqp_plan
 
         st.markdown("---")
@@ -286,17 +281,19 @@ else:
             st.write(step)
 
         st.markdown("---")
-        st.subheader("**Natural Language Model Description for AQP**")
-        st.write(st.session_state.last_aqp_cached_NLM_description)
+        st.subheader("**Natural Language Model Description for Comparison between AQP and QEP**")
+        st.session_state.last_plan_description = printing_API_output_plan(st.session_state.aqp_plan,st.session_state.qep_plan)
+        st.write(st.session_state.last_plan_description)
+        st.session_state.last_query = sql_query    
+        
 
     st.markdown("---")    
-
     st.markdown(
         "<u><b style='font-size: 30px;'>Natural Language Model Description for Query</b></u>",
         unsafe_allow_html=True
     )
 
     if st.session_state.last_query != sql_query:
-        st.session_state.last_query_description = printing_API_output(sql_query)
+        st.session_state.last_query_description = printing_API_output_query(sql_query)
         st.session_state.last_query = sql_query
     st.write(st.session_state.last_query_description)
