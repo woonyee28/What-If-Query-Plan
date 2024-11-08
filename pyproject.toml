@@ -12,7 +12,12 @@ psycopg2 = "^2.9.9"
 streamlit = "^1.39.0"
 networkx = "^3.4.2"
 pyvis = "^0.3.2"
+groq = "^0.11.0"
+transformers = "^4.46.2"
+torch = "^2.5.1"
 
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.29.5"
 
 [build-system]
 requires = ["poetry-core"]

@@ -166,10 +166,10 @@ def printing_API_output_plan(aqp_plan, qep_plan):
         messages=[
             {
                 "role": "user",
-                "content": f"Compare beteen the two AQP plan {aqp_plan} and QEP plan {qep_plan}. Structure the output similar to this, The QEP (SP) is selected because it has the least cost amongst other plans. Index scan on lineitem is faster due to high selectivity of predicate. Seq scan on orders is faster due to low selectivity of predicate.",
+                "content": f"Compare beteen the two AQP plan {aqp_plan} and QEP plan {qep_plan}. An example would be The QEP (SP) is selected because it has the least cost amongst other plans. Index scan on lineitem is faster due to high selectivity of predicate. Seq scan on orders is faster due to low selectivity of predicate. Provide the output specifc to the QEP plan and AQP plan",
             }
         ],
         model="llama3-8b-8192",
         stream=False,
     )
-    return chat_completion.choices[0].message.content
+    return chat_completion.choices[+0].message.content
