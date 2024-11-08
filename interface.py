@@ -270,6 +270,7 @@ else:
 
 
 
+    # To allow the last output to be stored in session state
     if "last_aqp_plan" not in st.session_state:
         st.session_state.last_aqp_plan = None
         st.session_state.last_aqp_cached_steps = []
@@ -284,13 +285,14 @@ else:
         st.session_state.last_query = None      
 
  
-
+    # Display the natual language text description for QEP Plan
     st.markdown(
     "<u><b style='font-size: 30px;'>Natural Language Text Description for QEP</b></u>",
     unsafe_allow_html=True
     )
 
     if st.session_state.qep_plan:
+        # Update the QEP plan in session state if the plan is modified
         if st.session_state.last_qep_plan != st.session_state.qep_plan:
             st.session_state.last_qep_cached_steps = printing_steps_output(st.session_state.qep_plan)
             st.session_state.last_qep_plan = st.session_state.qep_plan
@@ -298,6 +300,7 @@ else:
         st.markdown("---")
         st.subheader("**SQL Steps Description for QEP**")
         st.markdown("<b>The query is executed as follows</b>", unsafe_allow_html=True)
+        # Print the steps for QEP Plan
         for step in st.session_state.last_qep_cached_steps:
             st.write(step)
 
@@ -309,6 +312,7 @@ else:
     )
 
     if st.session_state.aqp_plan:
+        # Update the AQP plan in session state if the plan is modified
         if st.session_state.last_aqp_plan != st.session_state.aqp_plan:
             st.session_state.last_aqp_cached_steps = printing_steps_output(st.session_state.aqp_plan)
             st.session_state.last_aqp_plan = st.session_state.aqp_plan
@@ -316,11 +320,13 @@ else:
         st.markdown("---")
         st.subheader("**SQL Steps Description for AQP**")
         st.markdown("<b>The query is executed as follows</b>", unsafe_allow_html=True)
+        # Print the steps for AQP Plan
         for step in st.session_state.last_aqp_cached_steps:
             st.write(step)
 
         st.markdown("---")
         st.subheader("**Natural Language Model Description for Comparison between AQP and QEP**")
+        # Display the LLM model otuput for comparison between AQP and QEP
         st.session_state.last_plan_description = printing_API_output_plan(st.session_state.aqp_plan,st.session_state.qep_plan)
         st.write(st.session_state.last_plan_description)
         st.session_state.last_query = sql_query    
@@ -332,6 +338,7 @@ else:
         unsafe_allow_html=True
     )
 
+    # Display the LLM model otuput for quert explanation
     if st.session_state.last_query != sql_query:
         st.session_state.last_query_description = printing_API_output_query(sql_query)
         st.session_state.last_query = sql_query

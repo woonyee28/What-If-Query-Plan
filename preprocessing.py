@@ -73,7 +73,6 @@ def parse_plan_with_tables(plan, step_number=1, steps=None, intermediate_table_n
     
     details = f"Step {step_number}: Perform {node_type}"
 
-
     if node_type in ["Sequential Scan", "Bitmap Heap Scan", "Index Scan", "Index Only Scan", "Bitmap Index Scan", "Tid Scan", "Sample Scan"]:
         table_name = plan.get("Relation Name")
         filter_condition = plan.get("Filter")
@@ -134,7 +133,6 @@ def printing_steps_output(plan):
     print(plan)
     print("\n")
     steps = parse_plan_with_tables(plan)
-    total_steps = len(steps)
     reversed_steps = [
         f"Step {i+1}: {step[step.index(':')+1:].strip()} to get intermediate table T{i + 1}"
         for i, step in enumerate(steps[::-1])
