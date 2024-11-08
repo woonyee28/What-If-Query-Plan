@@ -7,6 +7,8 @@ from whatif import get_qep, get_aqp
 st.set_page_config(page_title="Query Plan Visualizer", layout="wide")
 
 # Initialize session state variables
+if "welcome_complete" not in st.session_state:
+    st.session_state.welcome_complete = False
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 if "username" not in st.session_state:
@@ -25,8 +27,9 @@ if "aqp_cost" not in st.session_state:
     st.session_state.aqp_cost = None
 
 # Display login form if not logged in
-if not st.session_state.logged_in:
+if not st.session_state.welcome_complete:
     st.title("Welcome to the Query Plan Visualizer")
+
     st.markdown("""
     ### Project Summary: What-If Analysis of Query Plans
 
@@ -50,7 +53,33 @@ if not st.session_state.logged_in:
 
     
     if st.button("Enter"):
-        connection = connect_to_db()
+        st.session_state.welcome_complete = True
+        st.rerun()
+
+    # Show login options if welcome is complete and not logged in
+elif not st.session_state.logged_in:
+    st.header("Database Login")
+
+    # New Feature: Choose between Local and Cloud database
+    st.subheader("Choose Database Location")
+    db_location = st.radio("Select Database Location", ("Local", "Cloud"))
+
+    # Collect login information based on the selected location
+    if db_location == "Local":
+        st.text("Enter local database credentials")
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+        dbname = st.text_input("Database Name")
+    else:
+        # TODO: Add cloud database logic here
+        st.text("Connecting to cloud database...")
+
+    if st.button("Log In"):
+        if db_location == "Local":
+            connection = connect_to_db() # TODO: Add local database logic here
+        else:
+            connection = connect_to_db()
+
         if connection:
             st.session_state.logged_in = True
             st.session_state.connection = connection
@@ -58,6 +87,12 @@ if not st.session_state.logged_in:
             st.rerun()
         else:
             st.error("Failed to connect. Check your credentials.")
+
+    # Exit button to go back to welcome screen
+    if st.button("Exit"):
+        st.session_state.welcome_complete = False
+        st.rerun()
+
 else:
     # Main interface
     st.sidebar.header("Database schema (current DB: TPCH)")
@@ -151,6 +186,10 @@ else:
                 st.error(f"Error executing query: {e}")
         else:
             st.error("No database connection available.")
+
+    # Query Explanation
+    # TODO: Implement query explanation logic
+    st.text_area("Query explanation goes here")
 
     st.subheader("Modify Planner Methods (What-if Scenarios)")
     scan_methods = {
