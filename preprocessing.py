@@ -130,8 +130,6 @@ def parse_plan_with_tables(plan, step_number=1, steps=None, intermediate_table_n
     return steps
 
 def printing_steps_output(plan):
-    print(plan)
-    print("\n")
     steps = parse_plan_with_tables(plan)
     reversed_steps = [
         f"Step {i+1}: {step[step.index(':')+1:].strip()} to get intermediate table T{i + 1}"
