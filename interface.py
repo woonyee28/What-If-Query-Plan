@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from preprocessing import connect_to_db, visualize_plan, printing_API_output_query, printing_API_output_plan, printing_steps_output
 from whatif import get_qep, get_aqp
+from dbmanager import DatabaseManager
 
 # Set the page configuration
 st.set_page_config(page_title="Query Plan Visualizer", layout="wide")
@@ -25,6 +26,12 @@ if "qep_cost" not in st.session_state:
     st.session_state.qep_cost = None
 if "aqp_cost" not in st.session_state:
     st.session_state.aqp_cost = None
+if "db_location" not in st.session_state:
+    st.session_state.db_location = None
+if "csv_path" not in st.session_state:
+    csv_path = "./datasets"
+if "db_params" not in st.session_state:
+    db_params = None
 
 # Display login form if not logged in
 if not st.session_state.welcome_complete:
@@ -60,33 +67,63 @@ if not st.session_state.welcome_complete:
 elif not st.session_state.logged_in:
     st.header("Database Login")
 
-    # New Feature: Choose between Local and Cloud database
+    # Choose between Local and Cloud database
     st.subheader("Choose Database Location")
-    db_location = st.radio("Select Database Location", ("Local", "Cloud"))
+    st.session_state.db_location = st.radio("Select Database Location", ("Local", "Cloud"))
 
-    # Collect login information based on the selected location
-    if db_location == "Local":
-        st.text("Enter local database credentials")
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
-        dbname = st.text_input("Database Name")
-    else:
-        # TODO: Add cloud database logic here
-        st.text("Connecting to cloud database...")
+    # Obtain db_params for local database
+    st.text("Enter local database credentials")
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+    dbname = st.text_input("Database Name")
+    host = st.text_input("Host")
+    port = st.text_input("Port")
+    sslmode = st.text_input("SSL Mode")
 
-    if st.button("Log In"):
-        if db_location == "Local":
-            connection = connect_to_db() # TODO: Add local database logic here
+    # Parameters for cloud database
+    if st.session_state.db_location == "Cloud":
+        db_params = {
+                'dbname': 'defaultdb',
+                'user': 'avnadmin',
+                'password': 'AVNS_mHAKcYWuEuMGRcuQcVi',
+                'host': 'sc3020-woonyee28.e.aivencloud.com',
+                'port': '14534',
+                'sslmode': 'require'
+            }
+        db_manager = DatabaseManager(db_params, csv_path)
+        db_manager.connect()
+        if db_manager.conn:
+                st.session_state.logged_in = True
+                st.session_state.connection = db_manager.conn
+                st.success("Login successful!")
+                st.rerun()
         else:
-            connection = connect_to_db()
-
-        if connection:
-            st.session_state.logged_in = True
-            st.session_state.connection = connection
-            st.success("Login successful!")
-            st.rerun()
-        else:
-            st.error("Failed to connect. Check your credentials.")
+            st.error("Failed to connect to the database.")
+        
+    elif st.session_state.db_location == "Local":
+        if st.button("Log In"):
+            db_params = {
+                "user": username,
+                "password": password,
+                "dbname": dbname,
+                'host': host,
+                'port': port,
+                'sslmode': sslmode
+            }
+            try:
+                db_manager = DatabaseManager(db_params, csv_path)
+                db_manager.connect()
+                # If the connection is successful, update the session state
+                if db_manager.conn:
+                    st.session_state.logged_in = True
+                    st.session_state.connection = db_manager.conn
+                    st.success("Login successful!")
+                    st.rerun()
+                else:
+                    st.error("Failed to connect to the database.")
+            except Exception as e:
+                # Handle any connection errors and display an error message
+                st.error(f"Failed to connect. Please check your credentials and try again. Error: {e}")
 
     # Exit button to go back to welcome screen
     if st.button("Exit"):
@@ -107,17 +144,18 @@ else:
         st.rerun()
 
     # Schema example display (static for now)
-    schema_example = """
-    - customer
-    - lineitem
-    - nation
-    - orders
-    - part
-    - partsupp
-    - region
-    - supplier
-    """
-    st.sidebar.text(schema_example)
+    if st.session_state.db_location == "Cloud":
+        schema_example = """
+        - customer
+        - lineitem
+        - nation
+        - orders
+        - part
+        - partsupp
+        - region
+        - supplier
+        """
+        st.sidebar.text(schema_example)
 
     st.sidebar.subheader("Example Queries")
     examples = [
@@ -186,10 +224,6 @@ else:
                 st.error(f"Error executing query: {e}")
         else:
             st.error("No database connection available.")
-
-    # Query Explanation
-    # TODO: Implement query explanation logic
-    st.text_area("Query explanation goes here")
 
     st.subheader("Modify Planner Methods (What-if Scenarios)")
     scan_methods = {
