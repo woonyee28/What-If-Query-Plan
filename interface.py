@@ -97,6 +97,9 @@ elif not st.session_state.logged_in:
             db_manager = DatabaseManager(db_params, csv_path)
             db_manager.connect()
             if db_manager.conn:
+                    with db_manager.conn.cursor() as cursor:
+                        cursor.execute("SET max_parallel_workers_per_gather = 0;")
+                    db_manager.conn.commit()
                     st.session_state.logged_in = True
                     st.session_state.connection = db_manager.conn
                     st.success("Login successful!")
@@ -126,6 +129,10 @@ elif not st.session_state.logged_in:
                 db_manager.connect()
                 # If the connection is successful, update the session state
                 if db_manager.conn:
+                    with db_manager.conn.cursor() as cursor:
+                        cursor.execute("SET max_parallel_workers_per_gather = 0;")
+                        cursor.execute("SET max_worker_processes = 1;")
+                    db_manager.conn.commit()
                     st.session_state.logged_in = True
                     st.session_state.connection = db_manager.conn
                     st.success("Login successful!")
@@ -309,24 +316,25 @@ else:
 
     # Left Column: Stack QEP, AQP, and Cost Difference vertically
     with main_col1:
-        st.subheader("Cost Summary")
-        
-        # Display QEP Cost
-        qep_cost = st.session_state.qep_cost
-        st.write(f"**QEP Total Cost:** {qep_cost}")
-        
-        # Display AQP Cost
-        aqp_cost = st.session_state.aqp_cost
-        st.write(f"**AQP Total Cost:** {aqp_cost}")
-        
-        # Display Cost Difference
-        cost_difference = aqp_cost - qep_cost
-        st.write(f"**Cost Difference (AQP - QEP):** {cost_difference}")
+        if st.session_state.qep_plan and st.session_state.aqp_plan:
+            st.subheader("Cost Summary")
+            
+            # Display QEP Cost
+            qep_cost = st.session_state.qep_cost
+            st.write(f"**QEP Total Cost:** {qep_cost}")
+            
+            # Display AQP Cost
+            aqp_cost = st.session_state.aqp_cost
+            st.write(f"**AQP Total Cost:** {aqp_cost}")
+            
+            # Display Cost Difference
+            cost_difference = aqp_cost - qep_cost
+            st.write(f"**Cost Difference (AQP - QEP):** {cost_difference}")
 
     # Right Column: Cost Explanation
     with main_col2:
-        st.subheader("Cost Explanation: AQP vs QEP")
         if st.session_state.qep_plan and st.session_state.aqp_plan:
+            st.subheader("Cost Explanation: AQP vs QEP")
             if (
                 "last_plan_description" not in st.session_state
                 or st.session_state.last_plan_description is None
@@ -344,6 +352,8 @@ else:
                     <p style="font-size: 16px; color:#ffffff;">{st.session_state.last_plan_description}</p>
                 </div>
             """, unsafe_allow_html=True)
+    if st.session_state.qep_plan and st.session_state.aqp_plan:    
+        st.markdown("---")
 
     # To allow the last output to be stored in session state
     if "last_aqp_plan" not in st.session_state:
@@ -367,8 +377,6 @@ else:
     # Define a function to toggle the show_descriptions variable
     def toggle_descriptions():
         st.session_state.show_descriptions = not st.session_state.show_descriptions
-
-    st.markdown("---")
 
     # Toggle button with callback to toggle descriptions
     st.button(
