@@ -1,3 +1,0 @@
-Nested Loop  (cost=0.00..431.00 rows=10000 width=50)
-   -> Seq Scan on orders  (cost=0.00..20.00 rows=1000 width=25)
-   -> Index Scan using customers_pkey on customers  (cost=0.00..390.00 rows=10 width=25)
