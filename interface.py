@@ -318,7 +318,7 @@ else:
         st.session_state.last_query_description = ""
         st.session_state.last_query = None      
 
- 
+    st.markdown("---")
     # Display the natual language text description for QEP Plan
     st.markdown(
     "<u><b style='font-size: 30px;'>Natural Language Text Description for QEP</b></u>",
@@ -366,11 +366,8 @@ else:
         st.session_state.last_query = sql_query    
         
 
-    st.markdown("---")    
-    st.markdown(
-        "<u><b style='font-size: 30px;'>Natural Language Model Description for Query</b></u>",
-        unsafe_allow_html=True
-    )
+    st.markdown("---")   
+    st.subheader("**Natural Language Model Description for Query**") 
 
     # Display the LLM model otuput for quert explanation
     if st.session_state.last_query != sql_query:

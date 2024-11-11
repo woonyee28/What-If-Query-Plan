@@ -60,8 +60,6 @@ def visualize_plan(plan):
         html = f.read()
     st.components.v1.html(html, height=600, scrolling=True)
 
-
-# ALEX - TODO: TO TACKLE EDGE CASES
 def parse_plan_with_tables(plan, step_number=1, steps=None, intermediate_table_num=1):
     if steps is None:
         steps = []
@@ -93,6 +91,11 @@ def parse_plan_with_tables(plan, step_number=1, steps=None, intermediate_table_n
     elif node_type == "Sort":
         sort_keys = ", ".join(plan.get("Sort Key", []))
         details += f" using the sorted condition {sort_keys}."
+
+    elif node_type == "Incremental Sort":
+        sort_keys = ", ".join(plan.get("Sort Key", []))
+        details += f" using the sorted keys {sort_keys}."
+
 
     elif node_type == "Aggregate":
         strategy = plan.get("Strategy", "Unknown strategy")
