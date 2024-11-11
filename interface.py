@@ -55,8 +55,8 @@ if not st.session_state.get("welcome_complete"):
 
     # Project Summary in a colored box
     st.markdown("""
-    <div style="background-color: #141420; padding: 10px; border-radius: 10px;">
-        <h3 style="color: #4b4b9f; text-align: center;">Project Summary: What-If Analysis of Query Plans</h3>
+    <div style="padding: 10px; border-radius: 10px;">
+        <h3 style=" text-align: center;">Project Summary: What-If Analysis of Query Plans</h3>
         <p>The <b>What-If Analysis of Query Plans</b> project aims to develop a software tool that enables users to analyze and modify query execution plans (QEPs) for SQL queries. This project is a part of the <b>SC3020 Database System Principles</b> course.</p>
     </div>
     """, unsafe_allow_html=True)
@@ -364,8 +364,8 @@ else:
                 st.session_state.last_qep_plan = st.session_state.qep_plan
                 st.session_state.last_aqp_plan = st.session_state.aqp_plan
             st.markdown(f"""
-                <div style="background-color:#322f3d; padding:15px; border-radius:5px;">
-                    <p style="font-size: 16px; color:#ffffff;">{st.session_state.last_plan_description}</p>
+                <div style="padding:15px; border-radius:5px;">
+                    <p style="font-size: 16px; ">{st.session_state.last_plan_description}</p>
                 </div>
             """, unsafe_allow_html=True)
     if st.session_state.qep_plan and st.session_state.aqp_plan:    
@@ -397,7 +397,7 @@ else:
                 st.session_state.last_qep_plan = st.session_state.qep_plan
 
                 # Build the HTML content for QEP steps in a gray box
-                qep_steps_html = "<div style='background-color: #322f3d; padding: 15px; border-radius: 5px;'>"
+                qep_steps_html = "<div style='padding: 15px; border-radius: 5px;'>"
                 qep_steps_html += "<b>The query is executed as follows:</b><br><br>"
                 for step in st.session_state.last_qep_cached_steps:
                     qep_steps_html += f"{step}<br><br>"
@@ -420,7 +420,7 @@ else:
                 st.session_state.last_aqp_plan = st.session_state.aqp_plan
 
                 # Build the HTML content for AQP steps in a gray box
-                aqp_steps_html = "<div style='background-color: #322f3d; padding: 15px; border-radius: 5px;'>"
+                aqp_steps_html = "<div style=' padding: 15px; border-radius: 5px;'>"
                 aqp_steps_html += "<b>The query is executed as follows:</b><br><br>"
                 for step in st.session_state.last_aqp_cached_steps:
                     aqp_steps_html += f"{step}<br><br>"
