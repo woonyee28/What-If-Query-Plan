@@ -5,7 +5,6 @@ import re
 import streamlit as st
 import networkx as nx
 from pyvis.network import Network
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 from groq import Groq
 
 def connect_to_db():
