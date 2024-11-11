@@ -12,12 +12,18 @@ networkx = "^3.4.2"
 pyvis = "^0.3.2"
 groq = "^0.11.0"
 transformers = "^4.46.2"
-torch = "^2.5.1"
 streamlit = "^1.40.0"
-psycopg2 = {extras = ["binary"], version = "^2.9.10"}
+psycopg2-binary = "^2.9.10"
+torch = {version = "^2.5.1+cpu", source = "pytorch_cpu"}
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.29.5"
+
+
+[[tool.poetry.source]]
+name = "pytorch_cpu"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "explicit"
 
 [build-system]
 requires = ["poetry-core"]
