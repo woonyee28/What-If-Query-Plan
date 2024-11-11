@@ -32,6 +32,21 @@ if "csv_path" not in st.session_state:
     csv_path = "./datasets"
 if "db_params" not in st.session_state:
     db_params = None
+# To allow the last output to be stored in session state
+if "last_aqp_plan" not in st.session_state:
+    st.session_state.last_aqp_plan = None
+    st.session_state.last_aqp_cached_steps = []
+    st.session_state.last_plan_description = ""
+if "last_qep_plan" not in st.session_state:
+    st.session_state.last_qep_plan = None        
+    st.session_state.last_qep_cached_steps = []
+if "last_query" not in st.session_state:
+    st.session_state.last_query_description = ""
+    st.session_state.last_query = None      
+    # Initialize session state for the toggle button
+if "show_descriptions" not in st.session_state:
+    st.session_state.show_descriptions = False
+
 
 # Display login form if not logged in
 if not st.session_state.get("welcome_complete"):
@@ -42,7 +57,7 @@ if not st.session_state.get("welcome_complete"):
     st.markdown("""
     <div style="background-color: #141420; padding: 10px; border-radius: 10px;">
         <h3 style="color: #4b4b9f; text-align: center;">Project Summary: What-If Analysis of Query Plans</h3>
-        <p>The <b>What-If Analysis of Query Plans</b> project aims to develop a software tool that enables users to analyze and modify query execution plans (QEPs) for SQL queries. This project is a part of the <b>CX4031/SC3020 Database System Principles</b> course.</p>
+        <p>The <b>What-If Analysis of Query Plans</b> project aims to develop a software tool that enables users to analyze and modify query execution plans (QEPs) for SQL queries. This project is a part of the <b>SC3020 Database System Principles</b> course.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -226,6 +241,7 @@ else:
     selected_example_name = st.sidebar.radio("Select an example to load", example_names)
     selected_query = next(query for name, query in examples if name == selected_example_name)
     sql_query = st.text_area("SQL Query", selected_query.strip())
+    
 
     # Run Query Button (Optional)
     if st.button("Run Query"):
@@ -355,25 +371,6 @@ else:
     if st.session_state.qep_plan and st.session_state.aqp_plan:    
         st.markdown("---")
 
-    # To allow the last output to be stored in session state
-    if "last_aqp_plan" not in st.session_state:
-        st.session_state.last_aqp_plan = None
-        st.session_state.last_aqp_cached_steps = []
-        st.session_state.last_plan_description = ""
-
-    if "last_qep_plan" not in st.session_state:
-        st.session_state.last_qep_plan = None        
-        st.session_state.last_qep_cached_steps = []
-
-    if "last_query" not in st.session_state:
-        st.session_state.last_query_description = ""
-        st.session_state.last_query = None      
-
-
-    # Initialize session state for the toggle button
-    if "show_descriptions" not in st.session_state:
-        st.session_state.show_descriptions = False
-
     # Define a function to toggle the show_descriptions variable
     def toggle_descriptions():
         st.session_state.show_descriptions = not st.session_state.show_descriptions
@@ -396,10 +393,8 @@ else:
                 unsafe_allow_html=True
             )
             if st.session_state.qep_plan:
-                # Update QEP steps in session state if plan is modified
-                if st.session_state.last_qep_plan != st.session_state.qep_plan:
-                    st.session_state.last_qep_cached_steps = printing_steps_output(st.session_state.qep_plan)
-                    st.session_state.last_qep_plan = st.session_state.qep_plan
+                st.session_state.last_qep_cached_steps = printing_steps_output(st.session_state.qep_plan)
+                st.session_state.last_qep_plan = st.session_state.qep_plan
 
                 # Build the HTML content for QEP steps in a gray box
                 qep_steps_html = "<div style='background-color: #322f3d; padding: 15px; border-radius: 5px;'>"
@@ -421,9 +416,8 @@ else:
             )
             if st.session_state.aqp_plan:
                 # Update AQP steps in session state if plan is modified
-                if st.session_state.last_aqp_plan != st.session_state.aqp_plan:
-                    st.session_state.last_aqp_cached_steps = printing_steps_output(st.session_state.aqp_plan)
-                    st.session_state.last_aqp_plan = st.session_state.aqp_plan
+                st.session_state.last_aqp_cached_steps = printing_steps_output(st.session_state.aqp_plan)
+                st.session_state.last_aqp_plan = st.session_state.aqp_plan
 
                 # Build the HTML content for AQP steps in a gray box
                 aqp_steps_html = "<div style='background-color: #322f3d; padding: 15px; border-radius: 5px;'>"
