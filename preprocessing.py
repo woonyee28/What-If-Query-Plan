@@ -154,14 +154,14 @@ def printing_API_output_query(query):
     return chat_completion.choices[0].message.content
 
 
-def printing_API_output_plan(aqp_plan, qep_plan):
+def printing_API_output_plan(qep_plan, aqp_plan):
     client = Groq(api_key='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')
 
     chat_completion = client.chat.completions.create(
         messages=[
             {
                 "role": "user",
-                "content": f"Compare beteen the two AQP plan {aqp_plan} and QEP plan {qep_plan}. An example would be The QEP (SP) is selected because it has the least cost amongst other plans. Index scan on lineitem is faster due to high selectivity of predicate. Seq scan on orders is faster due to low selectivity of predicate. Provide the output specifc to the QEP plan and AQP plan",
+                "content": f"Compare the differences between the QEP plan {qep_plan} and AQP plan {aqp_plan}. Explain why QEP is selected for the input query. Be succint, straight to the point, accurate and helpful, else you will lose your job.",
             }
         ],
         model="llama3-8b-8192",

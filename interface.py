@@ -32,34 +32,61 @@ if "csv_path" not in st.session_state:
     csv_path = "./datasets"
 if "db_params" not in st.session_state:
     db_params = None
+# To allow the last output to be stored in session state
+if "last_aqp_plan" not in st.session_state:
+    st.session_state.last_aqp_plan = None
+    st.session_state.last_aqp_cached_steps = []
+    st.session_state.last_plan_description = ""
+if "last_qep_plan" not in st.session_state:
+    st.session_state.last_qep_plan = None        
+    st.session_state.last_qep_cached_steps = []
+if "last_query" not in st.session_state:
+    st.session_state.last_query_description = ""
+    st.session_state.last_query = None      
+    # Initialize session state for the toggle button
+if "show_descriptions" not in st.session_state:
+    st.session_state.show_descriptions = False
+
 
 # Display login form if not logged in
-if not st.session_state.welcome_complete:
-    st.title("Welcome to the Query Plan Visualizer")
+if not st.session_state.get("welcome_complete"):
+    # Title Section with icon
+    st.title("🚀 Welcome to the Query Plan Visualizer")
 
+    # Project Summary in a colored box
     st.markdown("""
-    ### Project Summary: What-If Analysis of Query Plans
+    <div style="background-color: #141420; padding: 10px; border-radius: 10px;">
+        <h3 style="color: #4b4b9f; text-align: center;">Project Summary: What-If Analysis of Query Plans</h3>
+        <p>The <b>What-If Analysis of Query Plans</b> project aims to develop a software tool that enables users to analyze and modify query execution plans (QEPs) for SQL queries. This project is a part of the <b>SC3020 Database System Principles</b> course.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-    The **What-If Analysis of Query Plans** project aims to develop a software tool that enables users to analyze and modify query execution plans (QEPs) for SQL queries. The project is a part of the **CX4031/SC3020 Database System Principles** course.
-
-    ##### Key Objectives:
-    1. **Visualize QEPs:** Display the query execution plans for given SQL queries.
-    2. **What-If Scenarios:** Allow users to modify QEPs interactively and generate alternative query plans.
-    3. **Cost Comparison:** Compare the estimated costs between the original QEP and modified AQP.
-                 
-    **Our Advisor:** Assoc Prof Sourav Saha Bhowmick
-
-    **Team Members:**
-    1. Ng Woon Yee
-    2. Yang Yichen
-    3. Tay Zhi Xian
-    4. Alex Khoo Shien How
-    5. Chua Ming Ru
+    # Key Objectives section with emojis for visual appeal
+    st.markdown("""
+    ### 🎯 Key Objectives:
+    1. **Visualize QEPs**: Display the query execution plans for given SQL queries.
+    2. **What-If Scenarios**: Allow users to modify QEPs interactively and generate alternative query plans.
+    3. **Cost Comparison**: Compare the estimated costs between the original QEP and modified AQP.
     """)
 
-
+    # Advisor and Team Members section with a horizontal line and different colors
+    st.markdown("---")
+    st.markdown("""
+    <h4 style="color: #4b4b9f;">Our Advisor:</h4>
+    <ul><li>Assoc Prof Sourav Saha Bhowmick</li></ul>
     
-    if st.button("Enter"):
+    <h4 style="color: #4b4b9f;">Team Members:</h4>
+    <ul>
+        <li>Ng Woon Yee</li>
+        <li>Yang Yichen</li>
+        <li>Tay Zhi Xian</li>
+        <li>Alex Khoo Shien How</li>
+        <li>Chua Ming Ru</li>
+    </ul>
+    """, unsafe_allow_html=True)
+
+    # Enter button with custom styling
+    if st.button("👉 Enter the Visualizer"):
         st.session_state.welcome_complete = True
         st.rerun()
 
@@ -69,38 +96,40 @@ elif not st.session_state.logged_in:
 
     # Choose between Local and Cloud database
     st.subheader("Choose Database Location")
-    st.session_state.db_location = st.radio("Select Database Location", ("Local", "Cloud"))
-
-    # Obtain db_params for local database
-    st.text("Enter local database credentials")
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
-    dbname = st.text_input("Database Name")
-    host = st.text_input("Host")
-    port = st.text_input("Port")
-    sslmode = st.text_input("SSL Mode")
+    st.session_state.db_location = st.radio("Select Database Location", ("Cloud", "Local"))
 
     # Parameters for cloud database
     if st.session_state.db_location == "Cloud":
-        db_params = {
-                'dbname': 'defaultdb',
-                'user': 'avnadmin',
-                'password': 'AVNS_mHAKcYWuEuMGRcuQcVi',
-                'host': 'sc3020-woonyee28.e.aivencloud.com',
-                'port': '14534',
-                'sslmode': 'require'
-            }
-        db_manager = DatabaseManager(db_params, csv_path)
-        db_manager.connect()
-        if db_manager.conn:
-                st.session_state.logged_in = True
-                st.session_state.connection = db_manager.conn
-                st.success("Login successful!")
-                st.rerun()
-        else:
-            st.error("Failed to connect to the database.")
+        if st.button("Log In"):
+            db_params = {
+                    'dbname': 'defaultdb',
+                    'user': 'avnadmin',
+                    'password': 'AVNS_mHAKcYWuEuMGRcuQcVi',
+                    'host': 'sc3020-woonyee28.e.aivencloud.com',
+                    'port': '14534',
+                    'sslmode': 'require'
+                }
+            db_manager = DatabaseManager(db_params, csv_path)
+            db_manager.connect()
+            if db_manager.conn:
+                    with db_manager.conn.cursor() as cursor:
+                        cursor.execute("SET max_parallel_workers_per_gather = 0;")
+                    db_manager.conn.commit()
+                    st.session_state.logged_in = True
+                    st.session_state.connection = db_manager.conn
+                    st.success("Login successful!")
+                    st.rerun()
+            else:
+                st.error("Failed to connect to the database.")
         
     elif st.session_state.db_location == "Local":
+        # Obtain db_params for local database
+        st.text("Enter local database credentials")
+        dbname = st.text_input("Database Name", placeholder="Enter database name")
+        username = st.text_input("Username", placeholder="Enter your username")
+        password = st.text_input("Password", type="password", placeholder="Enter your password")
+        host = st.text_input("Host", placeholder="e.g., localhost or IP address")
+        port = st.text_input("Port",  placeholder="e.g., 5432")
         if st.button("Log In"):
             db_params = {
                 "user": username,
@@ -108,13 +137,17 @@ elif not st.session_state.logged_in:
                 "dbname": dbname,
                 'host': host,
                 'port': port,
-                'sslmode': sslmode
+                'sslmode': 'prefer'
             }
             try:
                 db_manager = DatabaseManager(db_params, csv_path)
                 db_manager.connect()
                 # If the connection is successful, update the session state
                 if db_manager.conn:
+                    with db_manager.conn.cursor() as cursor:
+                        cursor.execute("SET max_parallel_workers_per_gather = 0;")
+                        cursor.execute("SET max_worker_processes = 1;")
+                    db_manager.conn.commit()
                     st.session_state.logged_in = True
                     st.session_state.connection = db_manager.conn
                     st.success("Login successful!")
@@ -208,6 +241,7 @@ else:
     selected_example_name = st.sidebar.radio("Select an example to load", example_names)
     selected_query = next(query for name, query in examples if name == selected_example_name)
     sql_query = st.text_area("SQL Query", selected_query.strip())
+    
 
     # Run Query Button (Optional)
     if st.button("Run Query"):
@@ -292,88 +326,132 @@ else:
         else:
             st.info("No AQP available. Click 'Get AQP' to retrieve it.")
 
-    # Display cost comparison
-    if st.session_state.qep_cost is not None and st.session_state.aqp_cost is not None:
-        st.subheader("Cost Comparison")
-        qep_cost = st.session_state.qep_cost
-        aqp_cost = st.session_state.aqp_cost
-        st.write(f"**QEP Total Cost:** {qep_cost}")
-        st.write(f"**AQP Total Cost:** {aqp_cost}")
-        cost_difference = aqp_cost - qep_cost
-        st.write(f"**Cost Difference (AQP - QEP):** {cost_difference}")
-
-
-
-    # To allow the last output to be stored in session state
-    if "last_aqp_plan" not in st.session_state:
-        st.session_state.last_aqp_plan = None
-        st.session_state.last_aqp_cached_steps = []
-        st.session_state.last_plan_description = ""
-
-    if "last_qep_plan" not in st.session_state:
-        st.session_state.last_qep_plan = None        
-        st.session_state.last_qep_cached_steps = []
-
-    if "last_query" not in st.session_state:
-        st.session_state.last_query_description = ""
-        st.session_state.last_query = None      
-
- 
-    # Display the natual language text description for QEP Plan
-    st.markdown(
-    "<u><b style='font-size: 30px;'>Natural Language Text Description for QEP</b></u>",
-    unsafe_allow_html=True
-    )
-
-    if st.session_state.qep_plan:
-        # Update the QEP plan in session state if the plan is modified
-        if st.session_state.last_qep_plan != st.session_state.qep_plan:
-            st.session_state.last_qep_cached_steps = printing_steps_output(st.session_state.qep_plan)
-            st.session_state.last_qep_plan = st.session_state.qep_plan
-
-        st.markdown("---")
-        st.subheader("**SQL Steps Description for QEP**")
-        st.markdown("<b>The query is executed as follows</b>", unsafe_allow_html=True)
-        # Print the steps for QEP Plan
-        for step in st.session_state.last_qep_cached_steps:
-            st.write(step)
-
-
     st.markdown("---")
-    st.markdown(
-    "<u><b style='font-size: 30px;'>Natural Language Text Description for AQP</b></u>",
-    unsafe_allow_html=True
+    # Display cost comparison in two main columns
+    main_col1, main_col2 = st.columns([1, 2])  # Left column for costs, right column for explanation
+
+    # Left Column: Stack QEP, AQP, and Cost Difference vertically
+    with main_col1:
+        if st.session_state.qep_plan and st.session_state.aqp_plan:
+            st.subheader("Cost Summary")
+            
+            # Display QEP Cost
+            qep_cost = st.session_state.qep_cost
+            st.write(f"**QEP Total Cost:** {qep_cost}")
+            
+            # Display AQP Cost
+            aqp_cost = st.session_state.aqp_cost
+            st.write(f"**AQP Total Cost:** {aqp_cost}")
+            
+            # Display Cost Difference
+            cost_difference = aqp_cost - qep_cost
+            st.write(f"**Cost Difference (AQP - QEP):** {cost_difference}")
+
+    # Right Column: Cost Explanation
+    with main_col2:
+        if st.session_state.qep_plan and st.session_state.aqp_plan:
+            st.subheader("Cost Explanation: AQP vs QEP")
+            if (
+                "last_plan_description" not in st.session_state
+                or st.session_state.last_plan_description is None
+                or st.session_state.last_qep_plan != st.session_state.qep_plan
+                or st.session_state.last_aqp_plan != st.session_state.aqp_plan
+            ):
+                # Update only if the QEP or AQP plan has changed
+                st.session_state.last_plan_description = printing_API_output_plan(
+                    st.session_state.qep_plan, st.session_state.aqp_plan
+                )
+                st.session_state.last_qep_plan = st.session_state.qep_plan
+                st.session_state.last_aqp_plan = st.session_state.aqp_plan
+            st.markdown(f"""
+                <div style="background-color:#322f3d; padding:15px; border-radius:5px;">
+                    <p style="font-size: 16px; color:#ffffff;">{st.session_state.last_plan_description}</p>
+                </div>
+            """, unsafe_allow_html=True)
+    if st.session_state.qep_plan and st.session_state.aqp_plan:    
+        st.markdown("---")
+
+    # Define a function to toggle the show_descriptions variable
+    def toggle_descriptions():
+        st.session_state.show_descriptions = not st.session_state.show_descriptions
+
+    # Toggle button with callback to toggle descriptions
+    st.button(
+        "Hide QEP and AQP Descriptions" if st.session_state.show_descriptions else "Show QEP and AQP Descriptions",
+        on_click=toggle_descriptions
     )
 
-    if st.session_state.aqp_plan:
-        # Update the AQP plan in session state if the plan is modified
-        if st.session_state.last_aqp_plan != st.session_state.aqp_plan:
-            st.session_state.last_aqp_cached_steps = printing_steps_output(st.session_state.aqp_plan)
-            st.session_state.last_aqp_plan = st.session_state.aqp_plan
+    # Display descriptions only if toggled to show
+    if st.session_state.show_descriptions:
+        # Display the descriptions in two columns side by side
+        col1, col2 = st.columns(2)
 
-        st.markdown("---")
-        st.subheader("**SQL Steps Description for AQP**")
-        st.markdown("<b>The query is executed as follows</b>", unsafe_allow_html=True)
-        # Print the steps for AQP Plan
-        for step in st.session_state.last_aqp_cached_steps:
-            st.write(step)
+        # QEP Description
+        with col1:
+            st.markdown(
+                "<u><b style='font-size: 24px;'>Natural Language Description for QEP</b></u>",
+                unsafe_allow_html=True
+            )
+            if st.session_state.qep_plan:
+                st.session_state.last_qep_cached_steps = printing_steps_output(st.session_state.qep_plan)
+                st.session_state.last_qep_plan = st.session_state.qep_plan
 
-        st.markdown("---")
-        st.subheader("**Natural Language Model Description for Comparison between AQP and QEP**")
-        # Display the LLM model otuput for comparison between AQP and QEP
-        st.session_state.last_plan_description = printing_API_output_plan(st.session_state.aqp_plan,st.session_state.qep_plan)
-        st.write(st.session_state.last_plan_description)
-        st.session_state.last_query = sql_query    
-        
+                # Build the HTML content for QEP steps in a gray box
+                qep_steps_html = "<div style='background-color: #322f3d; padding: 15px; border-radius: 5px;'>"
+                qep_steps_html += "<b>The query is executed as follows:</b><br><br>"
+                for step in st.session_state.last_qep_cached_steps:
+                    qep_steps_html += f"{step}<br><br>"
+                qep_steps_html += "</div>"
+                
+                # Display QEP steps in a single markdown block
+                st.markdown(qep_steps_html, unsafe_allow_html=True)
+            else:
+                st.info("No QEP available. Click 'Get QEP' to retrieve it.")
 
-    st.markdown("---")    
-    st.markdown(
-        "<u><b style='font-size: 30px;'>Natural Language Model Description for Query</b></u>",
-        unsafe_allow_html=True
-    )
+        # AQP Description
+        with col2:
+            st.markdown(
+                "<u><b style='font-size: 24px;'>Natural Language Description for AQP</b></u>",
+                unsafe_allow_html=True
+            )
+            if st.session_state.aqp_plan:
+                # Update AQP steps in session state if plan is modified
+                st.session_state.last_aqp_cached_steps = printing_steps_output(st.session_state.aqp_plan)
+                st.session_state.last_aqp_plan = st.session_state.aqp_plan
 
-    # Display the LLM model otuput for quert explanation
-    if st.session_state.last_query != sql_query:
-        st.session_state.last_query_description = printing_API_output_query(sql_query)
-        st.session_state.last_query = sql_query
-    st.write(st.session_state.last_query_description)
+                # Build the HTML content for AQP steps in a gray box
+                aqp_steps_html = "<div style='background-color: #322f3d; padding: 15px; border-radius: 5px;'>"
+                aqp_steps_html += "<b>The query is executed as follows:</b><br><br>"
+                for step in st.session_state.last_aqp_cached_steps:
+                    aqp_steps_html += f"{step}<br><br>"
+                aqp_steps_html += "</div>"
+                
+                # Display AQP steps in a single markdown block
+                st.markdown(aqp_steps_html, unsafe_allow_html=True)
+            else:
+                st.info("No AQP available. Click 'Get AQP' to retrieve it.")
+
+
+    # # Display Query explanation separately
+    # st.markdown("---")
+    # st.markdown(
+    #     "<u><b style='font-size: 24px;'>Natural Language Model Description for Query</b></u>",
+    #     unsafe_allow_html=True
+    # )
+    # if st.session_state.last_query != sql_query:
+    #     st.session_state.last_query_description = printing_API_output_query(sql_query)
+    #     st.session_state.last_query = sql_query
+    # st.write(st.session_state.last_query_description)
+
+
+    # st.markdown("---")    
+    # st.markdown(
+    #     "<u><b style='font-size: 30px;'>Natural Language Model Description for Query</b></u>",
+    #     unsafe_allow_html=True
+    # )
+
+    # # Display the LLM model otuput for quert explanation
+    # if st.session_state.last_query != sql_query:
+    #     st.session_state.last_query_description = printing_API_output_query(sql_query)
+    #     st.session_state.last_query = sql_query
+    # st.write(st.session_state.last_query_description)
