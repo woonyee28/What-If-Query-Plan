@@ -34,6 +34,7 @@ def connect_to_db():
 def visualize_plan(plan):
     G = nx.DiGraph()
 
+
     def add_nodes_edges(node, parent_id=None):
         node_id = id(node)
         node_type = node['Node Type']
@@ -95,7 +96,6 @@ def parse_plan_with_tables(plan, step_number=1, steps=None, intermediate_table_n
     elif node_type == "Incremental Sort":
         sort_keys = ", ".join(plan.get("Sort Key", []))
         details += f" using the sorted keys {sort_keys}."
-
 
     elif node_type == "Aggregate":
         strategy = plan.get("Strategy", "Unknown strategy")

@@ -44,9 +44,10 @@ if "last_query" not in st.session_state:
     st.session_state.last_query_description = ""
     st.session_state.last_query = None      
     # Initialize session state for the toggle button
-if "show_descriptions" not in st.session_state:
-    st.session_state.show_descriptions = False
-
+if "show_plan_descriptions" not in st.session_state:
+    st.session_state.show_plan_descriptions = False
+if "show_query_descriptions" not in st.session_state:
+    st.session_state.show_query_descriptions = False
 
 # Display login form if not logged in
 if not st.session_state.get("welcome_complete"):
@@ -174,6 +175,7 @@ else:
         st.session_state.aqp_plan = None
         st.session_state.qep_cost = None
         st.session_state.aqp_cost = None
+        st.session_state.last_query = None
         st.rerun()
 
     # Schema example display (static for now)
@@ -258,6 +260,30 @@ else:
                 st.error(f"Error executing query: {e}")
         else:
             st.error("No database connection available.")
+    
+    # Define a function to toggle the show_descriptions variable
+    def toggle_plan_descriptions():
+        st.session_state.show_query_descriptions = not st.session_state.show_query_descriptions
+
+    # Toggle button with callback to toggle descriptions
+    st.button(
+        "Hide Query Description" if st.session_state.show_query_descriptions else "Show Query Description",
+        on_click=toggle_plan_descriptions
+    )
+
+    # Display descriptions only if toggled to show
+    if st.session_state.show_query_descriptions:
+        st.markdown(
+            "<u><b style='font-size: 24px;'>Natural Language Model Description for Query</b></u>",
+            unsafe_allow_html=True
+        )
+        if st.session_state.last_query != sql_query:
+            st.session_state.last_query_description = printing_API_output_query(sql_query)
+            st.session_state.last_query = sql_query
+        st.write(st.session_state.last_query_description)
+
+
+
 
     st.subheader("Modify Planner Methods (What-if Scenarios)")
     scan_methods = {
@@ -368,21 +394,22 @@ else:
                     <p style="font-size: 16px; ">{st.session_state.last_plan_description}</p>
                 </div>
             """, unsafe_allow_html=True)
+            
     if st.session_state.qep_plan and st.session_state.aqp_plan:    
         st.markdown("---")
 
     # Define a function to toggle the show_descriptions variable
-    def toggle_descriptions():
-        st.session_state.show_descriptions = not st.session_state.show_descriptions
+    def toggle_plan_descriptions():
+        st.session_state.show_plan_descriptions = not st.session_state.show_plan_descriptions
 
     # Toggle button with callback to toggle descriptions
     st.button(
-        "Hide QEP and AQP Descriptions" if st.session_state.show_descriptions else "Show QEP and AQP Descriptions",
-        on_click=toggle_descriptions
+        "Hide QEP and AQP Descriptions" if st.session_state.show_plan_descriptions else "Show QEP and AQP Descriptions",
+        on_click=toggle_plan_descriptions
     )
 
     # Display descriptions only if toggled to show
-    if st.session_state.show_descriptions:
+    if st.session_state.show_plan_descriptions:
         # Display the descriptions in two columns side by side
         col1, col2 = st.columns(2)
 
@@ -432,26 +459,4 @@ else:
                 st.info("No AQP available. Click 'Get AQP' to retrieve it.")
 
 
-    # # Display Query explanation separately
-    # st.markdown("---")
-    # st.markdown(
-    #     "<u><b style='font-size: 24px;'>Natural Language Model Description for Query</b></u>",
-    #     unsafe_allow_html=True
-    # )
-    # if st.session_state.last_query != sql_query:
-    #     st.session_state.last_query_description = printing_API_output_query(sql_query)
-    #     st.session_state.last_query = sql_query
-    # st.write(st.session_state.last_query_description)
 
-
-    # st.markdown("---")    
-    # st.markdown(
-    #     "<u><b style='font-size: 30px;'>Natural Language Model Description for Query</b></u>",
-    #     unsafe_allow_html=True
-    # )
-
-    # # Display the LLM model otuput for quert explanation
-    # if st.session_state.last_query != sql_query:
-    #     st.session_state.last_query_description = printing_API_output_query(sql_query)
-    #     st.session_state.last_query = sql_query
-    # st.write(st.session_state.last_query_description)
