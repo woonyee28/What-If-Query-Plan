@@ -195,13 +195,13 @@ else:
     examples = [
         ("Query 1", """
         SELECT l_orderkey, SUM(l_extendedprice * (1 - l_discount)) AS revenue,
-               o_orderdate, o_shippriority
-        FROM customer, orders, lineitem
+        o_orderdate, o_shippriority
+        FROM customer
+        JOIN orders ON customer.c_custkey = orders.o_custkey
+        JOIN lineitem ON orders.o_orderkey = lineitem.l_orderkey
         WHERE c_mktsegment = 'HOUSEHOLD'
-          AND c_custkey = o_custkey
-          AND l_orderkey = o_orderkey
-          AND o_orderdate < DATE '1995-03-21'
-          AND l_shipdate > DATE '1995-03-21'
+        AND o_orderdate < DATE '1995-03-21'
+        AND l_shipdate > DATE '1995-03-21'
         GROUP BY l_orderkey, o_orderdate, o_shippriority
         ORDER BY revenue DESC, o_orderdate
         LIMIT 10;
@@ -210,27 +210,27 @@ else:
         SELECT o_orderpriority, COUNT(*) AS order_count
         FROM orders
         WHERE o_orderdate >= DATE '1996-03-01'
-          AND o_orderdate < DATE '1996-03-01' + INTERVAL '3' MONTH
-          AND EXISTS (
+        AND o_orderdate < DATE '1996-03-01' + INTERVAL '3' MONTH
+        AND EXISTS (
             SELECT *
             FROM lineitem
-            WHERE l_orderkey = o_orderkey
-              AND l_commitdate < l_receiptdate
-          )
+            WHERE lineitem.l_orderkey = orders.o_orderkey
+            AND lineitem.l_commitdate < lineitem.l_receiptdate
+        )
         GROUP BY o_orderpriority
         ORDER BY o_orderpriority
         LIMIT 1;
         """),
         ("Query 3", """
         SELECT l_returnflag, l_linestatus,
-               SUM(l_quantity) AS sum_qty,
-               SUM(l_extendedprice) AS sum_base_price,
-               SUM(l_extendedprice * (1 - l_discount)) AS sum_disc_price,
-               SUM(l_extendedprice * (1 - l_discount) * (1 + l_tax)) AS sum_charge,
-               AVG(l_quantity) AS avg_qty,
-               AVG(l_extendedprice) AS avg_price,
-               AVG(l_discount) AS avg_disc,
-               COUNT(*) AS count_order
+        SUM(l_quantity) AS sum_qty,
+        SUM(l_extendedprice) AS sum_base_price,
+        SUM(l_extendedprice * (1 - l_discount)) AS sum_disc_price,
+        SUM(l_extendedprice * (1 - l_discount) * (1 + l_tax)) AS sum_charge,
+        AVG(l_quantity) AS avg_qty,
+        AVG(l_extendedprice) AS avg_price,
+        AVG(l_discount) AS avg_disc,
+        COUNT(*) AS count_order
         FROM lineitem
         WHERE l_extendedprice > 100
         GROUP BY l_returnflag, l_linestatus
@@ -313,6 +313,10 @@ else:
         for name, param in join_methods.items():
             selected_joins[param] = st.checkbox(name, value=True)
 
+    st.subheader("Join Order")
+    fix_join_order = st.checkbox("Fix Join Order", value=False)
+    st.write("Specify the desired join order by arranging the JOIN clauses in your SQL query. Only works for queries with Explicit Join Like in Example 1, Does not work with implicit join.")
+    st.write("E.g. Does not work with:From Table1,Table2,Table3...")
     # Buttons to get QEP and AQP
     col1, col2 = st.columns(2)
 
@@ -328,7 +332,7 @@ else:
             if st.session_state.connection:
                 scan_settings = {param: value for param, value in selected_scans.items()}
                 join_settings = {param: value for param, value in selected_joins.items()}
-                get_aqp(st.session_state.connection, sql_query, scan_settings, join_settings)
+                get_aqp(st.session_state.connection, sql_query, scan_settings, join_settings,fix_join_order)
             else:
                 st.error("No database connection available.")
 

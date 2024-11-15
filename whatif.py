@@ -5,6 +5,7 @@ import streamlit as st
 def get_qep(connection, query):
     try:
         with connection.cursor() as cursor:
+            cursor.execute("RESET join_collapse_limit;")
             explain_query = f"EXPLAIN (FORMAT JSON) {query}"
             cursor.execute(explain_query)
             result = cursor.fetchone()[0][0]
@@ -18,12 +19,16 @@ def get_qep(connection, query):
         st.error(f"Error retrieving QEP: {e}")
         return None, None
 
-def get_aqp(connection, query, scan_settings, join_settings):
+def get_aqp(connection, query, scan_settings, join_settings,fix_join_order):
     try:
         with connection.cursor() as cursor:
             # Set the planner settings
             for param, value in {**scan_settings, **join_settings}.items():
                 cursor.execute(f"SET {param} TO {'on' if value else 'off'};")
+            if fix_join_order:
+                cursor.execute("SET join_collapse_limit TO 1;")
+            else:
+                cursor.execute("RESET join_collapse_limit;")
             # Use EXPLAIN to get the alternative query plan in JSON format
             explain_query = f"EXPLAIN (FORMAT JSON) {query}"
             cursor.execute(explain_query)
