@@ -147,7 +147,6 @@ elif not st.session_state.logged_in:
                 if db_manager.conn:
                     with db_manager.conn.cursor() as cursor:
                         cursor.execute("SET max_parallel_workers_per_gather = 0;")
-                        cursor.execute("SET max_worker_processes = 1;")
                     db_manager.conn.commit()
                     st.session_state.logged_in = True
                     st.session_state.connection = db_manager.conn
