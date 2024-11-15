@@ -164,8 +164,7 @@ def printing_API_output_plan(qep_plan, aqp_plan):
         messages=[
             {
                 "role": "user",
-                "content": f"Compare the differences between the QEP plan {qep_plan} and AQP plan {aqp_plan}. Explain why QEP 
-                is selected for the input query. Be succint, straight to the point, accurate and helpful, else you will lose your job.",
+                "content": f"Compare the differences between the QEP plan {qep_plan} and AQP plan {aqp_plan}. Explain why QEP is selected for the input query. Be succint, straight to the point, accurate and helpful, else you will lose your job.",
             }
         ],
         model="llama3-8b-8192",
