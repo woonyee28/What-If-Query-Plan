@@ -207,19 +207,32 @@ else:
         LIMIT 10;
         """),
         ("Query 2", """
-        SELECT o_orderpriority, COUNT(*) AS order_count
-        FROM orders
-        WHERE o_orderdate >= DATE '1996-03-01'
-        AND o_orderdate < DATE '1996-03-01' + INTERVAL '3' MONTH
-        AND EXISTS (
-            SELECT *
-            FROM lineitem
-            WHERE lineitem.l_orderkey = orders.o_orderkey
-            AND lineitem.l_commitdate < lineitem.l_receiptdate
+        SELECT s_acctbal,
+        s_name,
+        n_name,
+        p_partkey,
+        p_mfgr,
+        s_address,
+        s_phone,
+        s_comment
+        FROM part
+        INNER JOIN partsupp ON p_partkey = ps_partkey
+        INNER JOIN supplier ON s_suppkey = ps_suppkey
+        INNER JOIN nation ON s_nationkey = n_nationkey
+        INNER JOIN region ON n_regionkey = r_regionkey
+        WHERE p_size = 15
+        AND p_type like '%BRASS'
+        AND r_name = 'EUROPE'
+        AND ps_supplycost = (
+        SELECT  min(ps_supplycost)
+        FROM partsupp
+        INNER JOIN supplier ON s_suppkey = ps_suppkey
+        INNER JOIN nation ON s_nationkey = n_nationkey
+        INNER JOIN region ON n_regionkey = r_regionkey
+        WHERE p_partkey = ps_partkey
+        AND r_name = 'EUROPE'
         )
-        GROUP BY o_orderpriority
-        ORDER BY o_orderpriority
-        LIMIT 1;
+        ORDER BY s_acctbal DESC, n_name, s_name, p_partkey;
         """),
         ("Query 3", """
         SELECT l_returnflag, l_linestatus,
